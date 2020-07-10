@@ -22,7 +22,7 @@ double dist(struct point p, struct point q) { // pとq の間の距離を計算
 	return sqrt((p.x-q.x)*(p.x-q.x)+(p.y-q.y)*(p.y-q.y));
 }
 
-double tour_length(struct point p[MAX_N], struct list tour) {
+double tour_length(struct point p[MAX_N], int n, struct list tour) {
 	double sum=0.0;
 	for(struct node *v = tour.head->next; v->next->next != 0; v = v->next)
 		sum += dist(p[v->value], p[v->next->value % n]);
@@ -52,7 +52,7 @@ void nn(struct point p[MAX_N],int n,struct list* tour,int m, struct list* prec){
 	struct node *nearest;
 	//未だ訪れていない都市群(unvisited)にすべての都市をぶっこむ
 	//さっきはprecに指定されてる都市は訪問したことになってるのでここではprecに指定されていない都市群が入る
-	for(int i = 0; i < n; i++) if(!did_visited[i]) insertBefore(unvisited.tail, i);
+	for(int i = 0; i < n; i++) if(!did_visit[i]) insertBefore(unvisited.tail, i);
 
 	for(struct node *v = tour->head->next; v->next != 0; v = v->next){
 		for(struct node *w = unvisited.head->next; w->next != 0; w = w->next){
