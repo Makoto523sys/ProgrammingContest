@@ -55,6 +55,7 @@ void nn(struct point p[MAX_N],int n,struct list* tour,int m, struct list* prec){
 	for(int i = 0; i < n; i++) if(!did_visit[i]) insertBefore(unvisited.tail, i);
 
 	for(struct node *v = tour->head->next; v->next != 0; v = v->next){
+		min_len = INF;
 		for(struct node *w = unvisited.head->next; w->next != 0; w = w->next){
 			double tmp = dist(p[v->value], p[w->value]);
 			//他のどの都市よりもvに近くて,訪れたことなければ放り込む
@@ -65,7 +66,10 @@ void nn(struct point p[MAX_N],int n,struct list* tour,int m, struct list* prec){
 		}
 		insertAfter(v, nearest->value);
 		did_visit[nearest->value] = true;
+		erase(nearest);
 	}
 	//sprintf(fileName, "tour%08d.dat", ++num);
 	//write_tour_data(fileName, n, tour);
 }
+
+void TwoOpt(struct point p[MAX_N],int n,struct list* tour){
