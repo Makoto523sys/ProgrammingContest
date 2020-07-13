@@ -59,3 +59,4 @@ inline void printString(struct list* p) {
     printf("%c", i->value);
   printf("\n");
 }
+#endif
