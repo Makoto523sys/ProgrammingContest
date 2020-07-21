@@ -8,7 +8,7 @@
 #include <time.h>
 #define MAX_N 10000   // 点の数の最大値
 #define INF 100000000 // 無限大の定義
-#define SWAP(a,b){a ^= b; b ^= a; a ^= b;}   
+#define SWAP(a, b){a ^= b; b ^= a; a ^= b;}   
 const int buff = 51;//ファイル名の長さの最大値.1は\0の分を考慮してる
 char fileName[buff];
 int num = 0;
@@ -44,39 +44,48 @@ bool is_empty(struct list l){
 	else false;
 }
 
+void list_to_array(int *array, struct list *tour, int n){
+	int index = 0;
+	for(struct node *v = tour->head->next; v->next != 0; v = v->next) tour[index++] = v->value;
+}
+
+void array_to_list(int *array, struct list *tour, int n){
+	struct node *v = tour->head->next;
+	for(int i = 0; i < n; i++) {
+		tour[i] = v->value;
+		v = v->next;
+	}
+}
+
 //デバッグはしてないのであしからず.多分セグフォ起こる...
 void TwoOpt(struct point p[MAX_N], int n, struct list *tour, struct list *prec){
+	int tmp_tour[n];
+	list_to_array(tmp_tour, tour, n);
 	bool flag = true;
 	//show_array(tour, n);
 	while(flag){
 		flag = false;
-		for(struct node *v = tour->head->next; v->next->next->next != 0; v = v->next){
-			struct node *u = v->next;
-			for(struct node *w = v->next->next; w->next->next != 0; w = w->next){
-				struct node *a = v;
-				struct node *b = u;
-				struct node *c = w;
-				struct node *d = w->next;
-				int counter = 0;
-				if(is_contain(*prec, a->value)) counter++;
-				if(is_contain(*prec, b->value)) counter++;
-				if(is_contain(*prec, c->value)) counter++;
-				if(is_contain(*prec, d->value)) counter++;
-				if(counter >= 2) continue;
-				if(dist(p[a->value], p[b->value]) + dist(p[c->value], p[d->value])
-				> dist(p[a->value], p[c->value]) + dist(p[b->value], p[d->value])){
-					a->next = c;
-					c->prev = a;
-					c->next = b;
-					b->prev = c;
-					b->next = d;
-					d->prev = b;
+		for(int i = 0; i <= n - 3; i++){
+			int j = i + 1;
+			for(int k = i + 2; k <= n - 1; k++){
+				int l = (k + 1) % n;
+				int a = tmp_tour[i]; int b = tmp_tour[j];
+				int c = tmp_tour[k]; int d = tmp_tour[l];
+				if(dist(p[a], p[b]) + dist(p[c], p[d])
+				> dist(p[a], p[c]) + dist(p[b], p[d])){
+					int g = j, h = k;
+					while(g < h){
+						SWAP(tmp_tour[g], tmp_tour[h]);
+						g++; h--;
+					}
 					flag = true;
 //					show_array(tour, n);
 				}
 			}
 		}
 	}
+	list_to_array(tmp_tour, tour, n);
+	array_to_list(tmp_tour, tour, n);
 }
 
 //これもまだデバッグが済んでない...
@@ -86,10 +95,13 @@ void nn(struct point p[MAX_N],int n,struct list* tour,int m, struct list* prec){
 	//訪問順制約で最初の現れる都市
 	struct node *start = prec->head->next;
 	did_visit[start->value] = true;
+	//訪問順制約で最初に現れる都市を訪問する
 	insertAfter(tour->head, start->value);
+	//訪問した都市をprecから外す
 	erase(start);
 	struct list unvisit; initialize(&unvisit);
 
+	//unisitに最初に訪問した都市以外の都市を突っ込んでいく
 	for(int i = 0; i < n; i++) {
 		if(did_visit[i]) continue;
 		else {
@@ -97,37 +109,31 @@ void nn(struct point p[MAX_N],int n,struct list* tour,int m, struct list* prec){
 			did_visit[i] = true;
 		}
 	}
-	for(struct node *v = tour->head->next; v->next != 0; v = v->next){
+
+	//訪れていない都市がなくなるまで
+	while(!is_empty(unvisit)){
 		double min_len = INF;
 		struct node *nearest = NULL;
-		bool flag = false;
 		//vに一番近い都市を探す.
 		for(struct node *u = unvisit.head->next; u->next != 0; u = u->next){
-			//順序制約に関係ない数の場合
-			if(!is_contain(*prec, u->value)){
-				double tmp = dist(p[v->value], p[u->value]);
-				if(min_len > tmp){
-					min_len = tmp;
-					nearest = u;
-				}
-				flag = true;
-			}
-			//順序制約に関係のある場合
-			else if(is_contain(*prec, u->value) && !(u->value ^ prec->head->next->value)){
-				double tmp = dist(p[v->value], p[u->value]);
-				if(min_len > tmp){
-					min_len = tmp;
-					nearest = u;
-				}
-				flag = false;
+			double tmp = dist(p[tour->tail->prev->value], p[u->value]);
+			if(tmp < min_len){
+				tmp = min_len;
+				nearest = u;
 			}
 		}
-		did_visit[nearest->value] = true;
-		if(flag) erase(prec->head->next);
-		insertAfter(tour->tail, nearest->value);
-		erase(nearest);
+		//順序制約に関係ない数の場合
+		if(!is_contain(*prec, nearest->value)){
+			insertBefore(tour->tail, nearest->value);
+			erase(nearest);
+		}
+		//順序制約に関係のある場合
+		else if(is_contain(*prec, u->value) && !(u->value ^ prec->head->next->value)){
+			insertbefore(tour->tail, nrearest->value);
+			erase(nearest);
+			erase(prec->head->next);
+		}
 	}
-
 }
 
 void ci(struct point p[MAX_N],int n,struct list* tour,int m, struct list* prec){
