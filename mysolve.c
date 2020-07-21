@@ -109,6 +109,48 @@ void TwoOpt(struct point p[MAX_N], int n, struct list *tour, struct list *prec){
 	}
 }
 
+void OrOpt(struct point p[MAX_N], int n, struct list *tour, struct list *prec){
+	for(struct node *r = tour->head->next; r->next != 0; r = r->next){
+		for(struct node *v = tour->head->next; v->next->next != 0; v = v->next){
+			struct node *u = v->next;
+			if(v == r || v->next == r) continue;
+			if((dist(p[r->prev->value], p[r->value]) + dist(p[r->next->value], p[r->value])
+					> dist(p[v->value], p[r->value]) + dist(p[u->value], p[r->value])) &&
+				!is_contain(*prec, r->value)){
+				r->next->prev = r->prev;
+				r->prev->next = r->next;
+				r->prev = v;
+				r->next = u;
+				v->next = r;
+				u->prev = r;
+			}
+		}
+	}
+}
+
+void OrOpt2(struct point p[MAX_N], int n, struct list *tour, struct list *prec){
+	for(struct node *c = tour->head->next->next; c->next->next->next != 0; c = c->next){
+		struct node *d = c->next;
+		struct node *a = c->prev;
+		struct node *b = d->next;
+		for(struct node *e = tour->head->next; e->next->next->next != 0; e = e->next){
+			struct node *f = e->next;
+			if(e == c || e == d || f == c || f == d) continue;
+			if((dist(p[a->value], p[c->value]) + dist(p[c->value], p[d->value]) + dist(p[d->value], p[b->value]) + dist(p[e->value], p[f->value])
+						> dist(p[a->value], p[b->value]) + dist(p[e->value], p[c->value]) + dist(p[c->value], p[d->value]) + dist(p[d->value], p[f->value])) && (!is_contain(*prec, c->value) && !is_contain(*prec, d->value))){
+				a->next = b;
+				b->prev = a;
+				c->prev = e;
+				d->next = f;
+				e->next = c;
+				f->prev = d;
+				//sprintf(fileName, "tour%08d.dat", ++num);
+				//write_tour_data(fileName, n, *tour);
+			}
+		}
+	}
+}
+
 //これもまだデバッグが済んでない...
 void nn(struct point p[MAX_N],int n,struct list* tour,int m, struct list* prec){
 	bool did_visit[n];
