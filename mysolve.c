@@ -9,8 +9,7 @@
 #define MAX_N 10000   // 点の数の最大値
 #define INF 100000000 // 無限大の定義
 #define SWAP(a, b){a ^= b; b ^= a; a ^= b;}   
-const int buff = 51;//ファイル名の長さの最大値.1は\0の分を考慮してる
-char fileName[buff];
+char fileName[51];
 int num = 0;
 
 struct point {
@@ -46,46 +45,68 @@ bool is_empty(struct list l){
 
 void list_to_array(int *array, struct list *tour, int n){
 	int index = 0;
-	for(struct node *v = tour->head->next; v->next != 0; v = v->next) tour[index++] = v->value;
+	for(struct node *v = tour->head->next; v->next != 0; v = v->next) array[index++] = v->value;
 }
 
 void array_to_list(int *array, struct list *tour, int n){
 	struct node *v = tour->head->next;
 	for(int i = 0; i < n; i++) {
-		tour[i] = v->value;
+		array[i] = v->value;
 		v = v->next;
+	}
+}
+
+void list_to_array_n(int *array, struct node *b, int len){
+	for(int i = 0; i < len; i++){
+	       	array[i] = b->value;
+		b = b->next;
+	}
+}
+
+void array_to_list_n(int *array, struct node *b, int len){
+	for(int i = 0; i < len; i++){
+		b->value = array[i];
+		b = b->next;
 	}
 }
 
 //デバッグはしてないのであしからず.多分セグフォ起こる...
 void TwoOpt(struct point p[MAX_N], int n, struct list *tour, struct list *prec){
-	int tmp_tour[n];
-	list_to_array(tmp_tour, tour, n);
 	bool flag = true;
-	//show_array(tour, n);
 	while(flag){
 		flag = false;
-		for(int i = 0; i <= n - 3; i++){
-			int j = i + 1;
-			for(int k = i + 2; k <= n - 1; k++){
-				int l = (k + 1) % n;
-				int a = tmp_tour[i]; int b = tmp_tour[j];
-				int c = tmp_tour[k]; int d = tmp_tour[l];
-				if(dist(p[a], p[b]) + dist(p[c], p[d])
-				> dist(p[a], p[c]) + dist(p[b], p[d])){
-					int g = j, h = k;
-					while(g < h){
-						SWAP(tmp_tour[g], tmp_tour[h]);
-						g++; h--;
+		for(struct node *v = tour->head->next; v->next->next->next != 0; v = v->next){
+			struct node *u = v->next;
+			for(struct node *w = u; w->next->next != 0; w = w->next){
+				struct node *a = v; struct node *b = u;
+				struct node *c = w; struct node *d = w->next;
+				if(dist(p[a->value], p[b->value]) + dist(p[c->value], p[d->value])
+				> dist(p[a->value], p[c->value]) + dist(p[b->value], p[d->value])){
+					int counter = 0;
+					//B - C間に含まれるprecに指定されている都市の数を数える
+					for(struct node *s = b; s != c->next; s = s->next){
+						if(is_contain(*prec, s->value)) counter++;
 					}
-					flag = true;
-//					show_array(tour, n);
+					//B - C間に含まれてるprecに指定されている都市の数が2つ以上なら2つ前のfor文に戻る
+					if(counter >= 2) continue;
+					//B - C間に含まれてるprecに指定されている都市の数が1つ以下なら,イイ感じにしてく
+					else{
+						int bc_len = 0;
+						for(struct node *k = b; k != c->next; k = k->next) bc_len++;
+						int bc_tour[bc_len];
+						list_to_array_n(bc_tour, b, bc_len);
+						int g = 0, h = bc_len - 1;
+						while(g < h){
+							SWAP(bc_tour[g], bc_tour[h]);
+							g++; h--;
+						}
+						array_to_list_n(bc_tour, b, bc_len);
+						flag = true;
+					}
 				}
 			}
 		}
 	}
-	list_to_array(tmp_tour, tour, n);
-	array_to_list(tmp_tour, tour, n);
 }
 
 //これもまだデバッグが済んでない...
@@ -128,8 +149,8 @@ void nn(struct point p[MAX_N],int n,struct list* tour,int m, struct list* prec){
 			erase(nearest);
 		}
 		//順序制約に関係のある場合
-		else if(is_contain(*prec, u->value) && !(u->value ^ prec->head->next->value)){
-			insertbefore(tour->tail, nrearest->value);
+		else if(is_contain(*prec, nearest->value) && !(nearest->value ^ prec->head->next->value)){
+			insertBefore(tour->tail, nearest->value);
 			erase(nearest);
 			erase(prec->head->next);
 		}
