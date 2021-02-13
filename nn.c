@@ -1,35 +1,117 @@
 #include<stdio.h>
+#include<stdlib.h>
 #include<math.h>
 #include<string.h>
-#include"list.h"
 #include<stdbool.h>
 
 const int MAX_N = 10000;
 const int INF = 1000000;
 
-struct point{
-    double x;
-    double y;
+struct node {
+  int value;
+  struct node* prev;
+  struct node* next;
 };
 
-double tour_length(struct point p[MAX_N], int n, int tour[MAX_N]) {
-  int i;
+struct list {
+  struct node* head;
+  struct node* tail;
+};
+
+
+void initialize(struct list* p) {
+  p->head = (struct node*)malloc(sizeof(struct node));
+  p->tail = (struct node*)malloc(sizeof(struct node));
+  p->head->prev = 0;
+  p->head->next = p->tail;
+  p->tail->prev = p->head;
+  p->tail->next = 0;
+}
+
+void insertBefore(struct node* p, int v) {
+  struct node* newNode = (struct node*)malloc(sizeof(struct node));
+  newNode->value = v;
+  newNode->next = p;
+  p->prev->next = newNode;
+  newNode->prev = p->prev;
+  p->prev = newNode;
+}
+
+void insertAfter(struct node* p, int v) {
+  struct node* newNode = (struct node*)malloc(sizeof(struct node));
+  newNode->value = v;
+  newNode->prev = p;
+  p->next->prev = newNode;
+  newNode->next = p->next;
+  p->next = newNode;
+}
+
+void erase(struct node* p) {
+  p->prev->next = p->next;
+  p->next->prev = p->prev;
+  free(p);
+}
+
+void printNumbers(struct list* p) {
+  for (struct node* i = p->head->next; i->next != 0; i = i->next)
+    printf("%d ", i->value);
+  printf("\n");
+}
+
+void printString(struct list* p) {
+  for (struct node* i = p->head->next; i->next != 0; i = i->next)
+    printf("%c", i->value);
+  printf("\n");
+}
+
+struct point{
+    int x;
+    int y;
+};
+
+double dist(struct point p, struct point q);
+double tour_length(struct point p[MAX_N], int n, struct list* tour);
+void write_tour_data(char *filename, int n, struct list* tour);
+void read_tsp_data(char *filename, struct point p[MAX_N],int *np);
+int find_nearest(struct point p[MAX_N], int city, int n, bool visited[MAX_N]);
+bool is_all_true(bool visited[MAX_N], int n);
+void nn(struct point p[MAX_N],int n,struct list* tour);
+
+int main(int argc, char *argv[]) {
+  int  n;                   // 点の数
+  struct point  p[MAX_N];   // 各点の座標を表す配列
+  struct list tour;   // 巡回路を表現する配列
+  initialize(&tour);
+
+  if(argc != 2) {
+    fprintf(stderr,"Usage: %s <tsp_filename>\n",argv[0]);
+    exit(EXIT_FAILURE);
+  }
+
+  // 点の数と各点の座標を1番目のコマンドライン引数で指定されたファイルから読み込む
+  read_tsp_data(argv[1],p, &n);
+  // 最近近傍法による巡回路構築
+  nn(p,n,&tour);
+  // 巡回路長を画面に出力
+  printf("%lf\n",tour_length(p,n,&tour));
+  // 巡回路をテキストファイルとして出力
+  write_tour_data("tour.dat",n,&tour);
+
+  exit(EXIT_SUCCESS);
+}
+
+double tour_length(struct point p[MAX_N], int n, struct list* tour) {
   double sum=0.0;
-  for(i=0;i<n;i++) sum+=dist(p[tour[i]],p[tour[(i+1)%n]]);
+  for(struct node* v = tour->head->next; v->next->next != NULL; v = v->next)
+      sum += dist(p[v->value], p[v->next->value]);
+  sum += dist(p[tour->head->next->value], p[tour->tail->prev->value]);
+  //for(i=0;i<n;i++) sum+=dist(p[tour[i]],p[tour[(i+1)%n]]);
   return sum;// 総距離が関数の戻り値
 }
 
-double dist(struct point* p, struct point* q) { // pとq の間の距離を計算
-  return sqrt((p->x-q->x)*(p->x-q->x)+(p->y-q->y)*(p->y-q->y));
+double dist(struct point p, struct point q) { // pとq の間の距離を計算
+  return sqrt((p.x-q.x)*(p.x-q.x)+(p.y-q.y)*(p.y-q.y));
 }
-
-double tour_length(struct point p[MAX_N], int n, int tour[MAX_N]) {
-  int i;
-  double sum=0.0;
-  for(i=0;i<n;i++) sum+=dist(p[tour[i]],p[tour[(i+1)%n]]);
-  return sum;// 総距離が関数の戻り値
-}
-
 
 void write_tour_data(char *filename, int n, struct list* tour){
     FILE *fp;
@@ -47,7 +129,6 @@ void write_tour_data(char *filename, int n, struct list* tour){
     fprintf(fp,"\n");
     fclose(fp);
 }
-
 void read_tsp_data(char *filename, struct point p[MAX_N],int *np) {
   FILE *fp;
   char buff[100];
@@ -73,16 +154,13 @@ void read_tsp_data(char *filename, struct point p[MAX_N],int *np) {
   fclose(fp);
 }
 
-  fclose(fp);
-}
-
 int find_nearest(struct point p[MAX_N], int city, int n, bool visited[MAX_N]){
     int nearest;
     double min_dist = INF;//初期値はクソデカくしとく
     for(int i = 0; i < n; i++){
         //すでに訪れている場合はスキップ
         if(!visited[i]) continue;
-        double tmp = dist(p + city, p + i);
+        double tmp = dist(p[city], p[i]);
         if(tmp < min_dist) nearest = i;
     }
     return nearest;
@@ -96,35 +174,20 @@ bool is_all_true(bool visited[MAX_N], int n){
 void nn(struct point p[MAX_N],int n,struct list* tour){
     int start = 0;
     bool visited[n];
+    printf("Before call memset\n");
     memset(visited, false, n * sizeof(bool));
+    printf("After call memset\n");
     visited[start] = true;
-    insetAfter(tour->tail, start);
-    while(is_all_true(visited)){
-        int next = find_nearest(p, tour->head->next->value, n);
+    printf("Before insertBefore\n");
+    insertBefore(tour->tail, start);
+    printf("After insertBefore\n");
+    while(is_all_true(visited, n)){
+        printf("Before find_nearest\n");
+        int next = find_nearest(p, tour->head->next->value, n, visited);
+        printf("After find_nearest\n");
         visited[next] = true;
-        insertAfter(tour->tail, next)
+        printf("Before insertAfter\n");
+        insertBefore(tour->tail, next);
+        printf("After insertAfter\n");
     }
-}
-
-main(int argc, char *argv[]) {
-  int  n;                   // 点の数
-  struct point  p[MAX_N];   // 各点の座標を表す配列
-  list tour;   // 巡回路を表現する配列
-  initialize(&tour);
-
-  if(argc != 2) {
-    fprintf(stderr,"Usage: %s <tsp_filename>\n",argv[0]);
-    exit(EXIT_FAILURE);
-  }
-
-  // 点の数と各点の座標を1番目のコマンドライン引数で指定されたファイルから読み込む
-  read_tsp_data(argv[1],p, &n);
-  // 最近近傍法による巡回路構築
-  nn(p,n,&tour);
-  // 巡回路長を画面に出力
-  printf("%lf\n",tour_length(p,n,tour));
-  // 巡回路をテキストファイルとして出力
-  write_tour_data("tour.dat",n,&tour);
-
-  exit(EXIT_SUCCESS);
 }
