@@ -15,7 +15,7 @@ struct list {
 };
 
 
-inline void initialize(struct list* p) {
+inline void initialize(struct list p) {
   p->head = (struct node*)malloc(sizeof(struct node));
   p->tail = (struct node*)malloc(sizeof(struct node));
   p->head->prev = 0;
@@ -48,13 +48,13 @@ inline void erase(struct node* p) {
   free(p);
 }
 
-inline void printNumbers(struct list* p) {
+inline void printNumbers(struct list p) {
   for (struct node* i = p->head->next; i->next != 0; i = i->next)
     printf("%d ", i->value);
   printf("\n");
 }
 
-inline void printString(struct list* p) {
+inline void printString(struct list p) {
   for (struct node* i = p->head->next; i->next != 0; i = i->next)
     printf("%c", i->value);
   printf("\n");
