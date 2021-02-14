@@ -55,13 +55,13 @@ void erase(struct node* p) {
 void printNumbers(struct list* p) {
   for (struct node* i = p->head->next; i->next != 0; i = i->next)
     printf("%d ", i->value);
-  printf("\n");
+  //printf("\n");
 }
 
 void printString(struct list* p) {
   for (struct node* i = p->head->next; i->next != 0; i = i->next)
     printf("%c", i->value);
-  printf("\n");
+  //printf("\n");
 }
 
 struct point{
@@ -159,7 +159,7 @@ int find_nearest(struct point p[MAX_N], int city, int n, bool visited[MAX_N]){
     double min_dist = INF;//初期値はクソデカくしとく
     for(int i = 0; i < n; i++){
         //すでに訪れている場合はスキップ
-        if(!visited[i]) continue;
+        if(visited[i]) continue;
         double tmp = dist(p[city], p[i]);
         if(tmp < min_dist) nearest = i;
     }
@@ -167,27 +167,31 @@ int find_nearest(struct point p[MAX_N], int city, int n, bool visited[MAX_N]){
 }
 
 bool is_all_true(bool visited[MAX_N], int n){
-    for(int i = 0; i < n; i++) if(!visited[i]) return false;
+    //printf("start is_all_true\n");
+    for(int i = 0; i < n; i++){
+        if(!visited[i]) return false;
+    }
     return true;
 }
 
 void nn(struct point p[MAX_N],int n,struct list* tour){
     int start = 0;
     bool visited[n];
-    printf("Before call memset\n");
+    //printf("Before call memset\n");
     memset(visited, false, n * sizeof(bool));
-    printf("After call memset\n");
+    //printf("After call memset\n");
     visited[start] = true;
-    printf("Before insertBefore\n");
+    //printf("Before insertBefore\n");
     insertBefore(tour->tail, start);
-    printf("After insertBefore\n");
-    while(is_all_true(visited, n)){
-        printf("Before find_nearest\n");
+    //printf("After insertBefore\n");
+    printf("start while loop\n");
+    while(!is_all_true(visited, n)){
+        //printf("Before find_nearest\n");
         int next = find_nearest(p, tour->head->next->value, n, visited);
-        printf("After find_nearest\n");
+        //printf("After find_nearest\n");
         visited[next] = true;
-        printf("Before insertAfter\n");
+        //printf("Before insertAfter\n");
         insertBefore(tour->tail, next);
-        printf("After insertAfter\n");
+        //printf("After insertAfter\n");
     }
 }
