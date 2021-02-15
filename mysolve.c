@@ -8,7 +8,7 @@
 #include <time.h>
 #define MAX_N 10000   // 点の数の最大値
 #define INF 100000000 // 無限大の定義
-#define SWAP(a, b){a ^= b; b ^= a; a ^= b;}   
+#define SWAP(a, b){a ^= b; b ^= a; a ^= b;}
 double lambda = 0.0;//要件等
 char fileName[51];
 int num = 0;
@@ -18,7 +18,7 @@ struct point {
   int y;
 };
 
-double dist(struct point p, struct point q) { // pとq の間の距離を計算 
+double dist(struct point p, struct point q) { // pとq の間の距離を計算
 	return sqrt((p.x-q.x)*(p.x-q.x)+(p.y-q.y)*(p.y-q.y));
 }
 
@@ -58,10 +58,10 @@ void array_to_list_n(int *array, struct node *b, int len){
 }
 
 void write_tour_data(char *filename, int n, struct list tour){
-	FILE *fp; 
+	FILE *fp;
 	int i;
 	// 構築した巡回路をfilenameという名前のファイルに書き出すためにopen
-	if((fp=fopen(filename,"wt"))==NULL){ 
+	if((fp=fopen(filename,"wt"))==NULL){
 		fprintf(stderr,"Error: File %s open failed.\n",filename);
 		exit(EXIT_FAILURE);
 	}
@@ -78,9 +78,9 @@ void read_tsp_data(char *filename, struct point p[MAX_N],int *np, struct list* p
 	if ((fp=fopen(filename,"rt")) == NULL) {// 指定ファイルを読み込み用に開く
 		fprintf(stderr,"Error: File %s open failed.\n",filename);
 		exit(EXIT_FAILURE);
-	}   
+	}
 	while((fgets(buff,sizeof(buff),fp)!=NULL)   // PRECEDENCE_CONSTRAINTS:で始まる行に出会う
-		&&(strncmp("PRECEDENCE_CONSTRAINTS:",buff,23)!=0)) ; // まで読み飛ばす. 
+		&&(strncmp("PRECEDENCE_CONSTRAINTS:",buff,23)!=0)) ; // まで読み飛ばす.
 	if(strncmp("PRECEDENCE_CONSTRAINTS:",buff,23)==0)  {
 		sscanf(buff+24,"%d",mp);
 		for(int i = 0; i < *mp; i++){
@@ -93,13 +93,13 @@ void read_tsp_data(char *filename, struct point p[MAX_N],int *np, struct list* p
 		exit(EXIT_FAILURE);
 	}
 	while((fgets(buff,sizeof(buff),fp)!=NULL)   // DIMENSION で始まる行に出会う
-		&&(strncmp("DIMENSION",buff,9)!=0)) ; // まで読み飛ばす. 
+		&&(strncmp("DIMENSION",buff,9)!=0)) ; // まで読み飛ばす.
 	sscanf(buff,"DIMENSION: %d",np);           // 点の数 *np を読み込む
 	while((fgets(buff,sizeof(buff),fp)!=NULL)   // NODE_COORD_SECTIONで始まる
-		&&(strncmp("NODE_COORD_SECTION",buff,18)!=0)) ; // 行に出会うまで, 
-	// 読み飛ばす. 
+		&&(strncmp("NODE_COORD_SECTION",buff,18)!=0)) ; // 行に出会うまで,
+	// 読み飛ばす.
 	for(i=0;i<*np;i++) {                       // i=0 から i=(*np)-1まで
-		if(fgets(buff,sizeof(buff),fp)!=NULL) 
+		if(fgets(buff,sizeof(buff),fp)!=NULL)
 		sscanf(buff,"%*d %d %d",&(p[i].x),&(p[i].y)); // i番目の点の座標を読み込む
 	}
 	fclose(fp);
@@ -394,7 +394,7 @@ void random_insert(struct point p[MAX_N],int n,struct list* tour,int m, struct l
 			prec_ptr = prec_ptr->next;
 		}
 		else if(is_empty(not_prec)) continue;
-		else push_not_prec(tour, n, &not_prec, prec, did_visit); 
+		else push_not_prec(tour, n, &not_prec, prec, did_visit);
 	}
 	sprintf(fileName, "tour%08d.dat", ++num);
 	write_tour_data(fileName, n, *tour);
@@ -419,7 +419,7 @@ void conjurer_joke(struct list *l, int n, struct list prec){
 		        if(!is_contain(prec, w->value)) v = w;
 		        while(is_contain(prec, v->value)) v = v->next;
 		}
-		if(!(counter ^ b)){ 
+		if(!(counter ^ b)){
 			printf("In second if\n");
 		        u = w;
 		        while(is_contain(prec, u->value)) u = u->next;
