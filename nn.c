@@ -38,7 +38,7 @@ void insertBefore(struct node* p, int v);
 void initialize(struct list* p);
 void solve(struct point p[MAX_N], int n, struct list* tour, bool optimize);
 void twoopt(struct point p[MAX_N], int n, struct list* tour);
-void reconstruction(struct node *v, struct node *w);
+void reverse_between(struct node*, struct node*);
 
 int main(int argc, char *argv[]) {
   int  n;                   // 点の数
@@ -224,9 +224,20 @@ void twoopt(struct point p[MAX_N], int n, struct list *tour){
     }
 }
 
-void reconstruction(struct node* v, struct node* w){
-    struct node *v_next = v->next;
-    struct node *w_prev = w->prev;
-    for(struct node *f = v_next; f != w; f = f->next){
+void reverse_between(struct node* v, struct node* w){
+    struct node start = *v;
+    struct node end = *w;
+    int N = 0;
+    /* for (struct node* i = &start; i->next != 0; i = i->next)
+        printf("%d ", i->value);
+    printf("\n");*/
+    for(struct node *t = v; t != w->next; t = t->next) N++;
+    for(int i = 0; i < N / 2; i++){
+        int a = v->value;
+        int b = w->value;
+        v->value = b;
+        w->value = a;
+        v = v->next;
+        w = w->prev;
     }
 }
